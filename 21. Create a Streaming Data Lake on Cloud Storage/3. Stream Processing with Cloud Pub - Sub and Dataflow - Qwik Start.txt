@@ -1,0 +1,46 @@
+#----------CHANGE REGION-------
+REGION=us-east1
+
+gcloud config set compute/region $REGION
+gcloud services disable dataflow.googleapis.com
+gcloud services enable dataflow.googleapis.com
+gcloud services enable cloudscheduler.googleapis.com
+
+
+PROJECT_ID=$(gcloud config get-value project)
+BUCKET_NAME="${PROJECT_ID}-bucket"
+TOPIC_ID=my-id
+REGION=$REGION
+AE_REGION=$REGION #(IF REGION IS us-central1, USE AE_REGION AS us-central)
+gsutil mb gs://$BUCKET_NAME
+gcloud pubsub topics create $TOPIC_ID
+gcloud app create --region=$AE_REGION
+gcloud scheduler jobs create pubsub publisher-job --schedule="* * * * *" \
+    --topic=$TOPIC_ID --message-body="Hello!"
+gcloud scheduler jobs run publisher-job --location=$REGION
+
+docker run -it -e DEVSHELL_PROJECT_ID=$DEVSHELL_PROJECT_ID python:3.7 /bin/bash
+#---------If ASKS - Would you like to enable and retry? ENTER : y--------------------------------------------------
+
+#------------DOCKER TERMINAL-----------
+git clone https://github.com/GoogleCloudPlatform/python-docs-samples.git
+cd python-docs-samples/pubsub/streaming-analytics
+pip install -U -r requirements.txt  # Install Apache Beam dependencies
+
+#---------------------------REPLACE REGION VARIABLE & PROJECT ID AT ALL PLACES-------------------------------------------------
+REGION=us-east1
+
+python PubSubToGCS.py \
+    --project=qwiklabs-gcp-00-0378fc6bd426 \
+    --region=$REGION \
+    --input_topic=projects/qwiklabs-gcp-00-0378fc6bd426/topics/my-id \
+    --output_path=gs://qwiklabs-gcp-00-0378fc6bd426-bucket/samples/output \
+    --runner=DataflowRunner \
+    --window_size=2 \
+    --num_shards=2 \
+    --temp_location=gs://qwiklabs-gcp-00-0378fc6bd426-bucket/temp
+
+#----WAIT ATLEAST 5 MINUTES BEFORE CLICKING CHECK MY PROGRESS OF LAST TASK---------
+
+
+

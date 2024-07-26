@@ -1,0 +1,11 @@
+#----OPEN LOOKER STUDIO : https://lookerstudio.google.com/
+#----CLICK Use It For Free > LOGIN WITH STUDENT CREDENTIALS > CREATE BLANK REPORT > 
+#----SELECT RANDOM COUNTRY && RANDOM COMPANY NAME 
+#---CLICK YES TO ALL > CONTINUE
+#----CREATE BLANK REPORT >  SELECT BIGQUERY > AUTHORIZE
+#---SELECT YOUR STUDENT ACCOUNT 
+#---- Shared projects > your Project ID > For Shared Project Name : " data-to-insights " > ecommerce > sales_report > CLICK ADD > CLICK ADD TO REPORT
+
+
+#----LAB COMPLETED--
+ 

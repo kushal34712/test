@@ -1,0 +1,9 @@
+gcloud config set compute/region us-central1
+
+export PROJECT_ID=$(gcloud info --format='value(config.project)')
+export BUCKET_NAME=$PROJECT_ID-bucket
+gsutil mb gs://$BUCKET_NAME
+git clone https://github.com/karankk45/karankk45.git
+gsutil cp karankk45/demo-image.jpg gs://$BUCKET_NAME
+
+gsutil acl ch -u AllUsers:R gs://$BUCKET_NAME/demo-image.jpg

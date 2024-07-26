@@ -1,0 +1,14 @@
+#------CHANGE USER2 GIVEN IN LAB INSTRUCTIONS------
+export USER2=student-01-0b88b78dae9c@qwiklabs.net
+
+echo "Hello World" > sample.txt
+
+
+export PROJECT_ID=$(gcloud config list --format 'value(core.project)')
+gsutil mb gs://$PROJECT_ID
+gsutil cp sample.txt gs://${PROJECT_ID}/sample.txt
+
+gcloud projects remove-iam-policy-binding $DEVSHELL_PROJECT_ID --member=user:$USER2 --role=roles/viewer
+
+gcloud projects add-iam-policy-binding $DEVSHELL_PROJECT_ID --member=user:$USER2 --role=roles/storage.objectViewer
+

@@ -1,0 +1,50 @@
+#--------CHANGE REGION, TOPIC_ID, MESSAGE AND AE_REGION (ONLY FOR us-central1 ) ---------
+export REGION=us-east4
+export TOPIC_ID=mytopic
+export MESSAGE="Hello!"
+
+
+AE_REGION=$REGION #(IF REGION IS us-central1, USE AE_REGION AS us-central)
+
+PROJECT_ID=$(gcloud config get-value project)
+export BUCKET_NAME="${PROJECT_ID}-bucket"
+
+gcloud services disable dataflow.googleapis.com
+
+gcloud services enable dataflow.googleapis.com
+gcloud services enable cloudscheduler.googleapis.com
+gsutil mb -c standard -l $REGION gs://$BUCKET_NAME
+#gsutil mb gs://$BUCKET_NAME
+
+gcloud pubsub topics create $TOPIC_ID
+
+gcloud app create --region=$AE_REGION
+
+
+gcloud scheduler jobs create pubsub quicklab --schedule="* * * * *" \
+    --topic=$TOPIC_ID --message-body="$MESSAGE"
+
+
+gcloud scheduler jobs run quicklab --location=$REGION
+
+#---------------------------------------------------------
+
+
+git clone https://github.com/GoogleCloudPlatform/java-docs-samples.git
+cd java-docs-samples/pubsub/streaming-analytics
+
+
+mvn compile exec:java \
+-Dexec.mainClass=com.examples.pubsub.streaming.PubSubToGcs \
+-Dexec.cleanupDaemonThreads=false \
+-Dexec.args=" \
+    --project=$PROJECT_ID \
+    --region=$REGION \
+    --inputTopic=projects/$PROJECT_ID/topics/$TOPIC_ID \
+    --output=gs://$BUCKET_NAME/samples/output \
+    --runner=DataflowRunner \
+    --windowSize=2"
+
+#--------PLEASE WAIT FOR 30 MINUTES BEFORE CLICKING CHECK MY PROGRESS FOR LAST TASK---
+
+

@@ -1,0 +1,3 @@
+curl -LO raw.githubusercontent.com/Techcps/GSP-Short-Trick/master/APIs%20Explorer%20Cloud%20Storage/techcps421.sh
+sudo chmod +x techcps421.sh
+./techcps421.sh

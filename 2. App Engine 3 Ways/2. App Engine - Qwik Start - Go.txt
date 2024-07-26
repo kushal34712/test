@@ -1,0 +1,13 @@
+gcloud services enable appengine.googleapis.com
+git clone https://github.com/GoogleCloudPlatform/golang-samples.git
+cd golang-samples/appengine/go11x/helloworld
+sudo apt-get install google-cloud-sdk-app-engine-go
+gcloud app deploy
+
+#---WHEN ASKED TO CHOOSE ZONE : PRESS NUMBER FOR ZONE FROM LAB INSTRUCTIONS---------
+#---us-central1 : 10
+#--us-west1 : 13
+#--us-east4 : 12
+#----europe-west  : 1 
+#---us-central  : 2 
+#-----us-east1 : 3

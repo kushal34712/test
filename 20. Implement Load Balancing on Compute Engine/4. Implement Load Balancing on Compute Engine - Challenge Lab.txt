@@ -1,0 +1,13 @@
+#-----------CHANGE BELOW 4 VARIABLES---------
+
+export ZONE=us-west3-c
+export INSTANCE_NAME=nucleus-jumphost-975
+export PORT=8081
+export FIREWALL_RULE=allow-tcp-rule-302
+
+
+curl -LO raw.githubusercontent.com/Techcps/GSP-Short-Trick/master/Implement%20Load%20Balancing%20on%20Compute%20Engine:%20Challenge%20Lab/techcps313.sh
+sudo chmod +x techcps313.sh
+./techcps313.sh
+
+#=============WAIT FOR 10 MINUTES FOR SECOND CHECK MY PROGRESS IN GREEN============

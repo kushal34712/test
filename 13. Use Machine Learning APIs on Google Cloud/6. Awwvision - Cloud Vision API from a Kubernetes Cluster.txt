@@ -1,0 +1,7 @@
+#---------CHANGE ZONE--------------
+
+export ZONE=us-west1-c
+
+curl -LO raw.githubusercontent.com/Techcps/GSP-Short-Trick/master/Awwvision%3A%20Cloud%20Vision%20API%20from%20a%20Kubernetes%20Cluster/techcps066.sh
+sudo chmod +x techcps066.sh
+./techcps066.sh

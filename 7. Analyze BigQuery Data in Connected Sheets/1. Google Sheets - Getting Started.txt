@@ -1,0 +1,13 @@
+
+#--OPEN GOOGLE SHEETS : https://docs.google.com/spreadsheets/d/19iLO-XbrqqWRuqphkXTax0lFn71NW6crJK504JvAxoU/edit#gid=599358521 
+#---> FILE > MAKE A COPY----
+
+#---OPEN GOOGLE DRIVE : https://drive.google.com/ 
+#---UPLOAD exported-data.csv & imported-data.xlsx----To DRIVE----
+#-----OPEN exported-data.csv WITH GOOGLE SHEETS---
+#----FILE > IMPORT > UPLOAD TAB > BROWSE > Select imported-data.xlsx >IMPORT DATA >CLICK Open now
+#----SWITCH TO NEWLY OPENED TAB > SHARE > GENERAL ACCESS TO QWIKLABS > DONE ----
+
+#--------------LAB COMPLETED------------
+
+#---FOR HELP - FOLLOW YOUTUBE : https://youtu.be/VOxyLjNC_4Y---

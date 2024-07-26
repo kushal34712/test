@@ -1,0 +1,9 @@
+gcloud alpha services api-keys create --display-name="testnamee" 
+
+KEY_NAME=$(gcloud alpha services api-keys list --format="value(name)" --filter "displayName=testnamee")
+export API_KEY=$(gcloud alpha services api-keys get-key-string $KEY_NAME --format="value(keyString)")
+
+git clone https://github.com/karankk45/karankk45.git
+
+sudo chmod +x karankk45/quicklabarc122.sh
+./karankk45/quicklabarc122.sh

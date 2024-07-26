@@ -1,0 +1,13 @@
+gcloud services enable appengine.googleapis.com
+git clone https://github.com/GoogleCloudPlatform/php-docs-samples.git
+cd php-docs-samples/appengine/standard/helloworld
+gcloud app deploy
+
+#----ENTER NUMBER RESPECTIVE TO REGION GIVEN IN LAB INSTRUCTIONS---------
+
+#---[10] us-central    
+#---[11] us-east1      
+#---[12] us-east4      
+#---[13] us-west1     
+
+#----PRESS Y----------

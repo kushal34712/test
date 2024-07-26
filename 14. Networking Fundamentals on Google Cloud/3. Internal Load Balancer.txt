@@ -1,0 +1,12 @@
+#----CHANGE ZONE & STATIC_IP_ADDRESS ---------
+export ZONE=us-east1-c
+export STATIC_IP_ADDRESS=10.142.10.10
+
+export REGION=${ZONE::-2}
+gcloud config set compute/region $REGION
+gcloud config set compute/zone $ZONE
+curl -LO raw.githubusercontent.com/quiccklabs/Labs_solutions/master/Internal%20Load%20Balancer/quicklabgsp041.sh
+
+sudo chmod +x quicklabgsp041.sh
+
+./quicklabgsp041.sh

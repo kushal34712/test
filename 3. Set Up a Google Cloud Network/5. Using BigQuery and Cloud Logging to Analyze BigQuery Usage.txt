@@ -1,0 +1,86 @@
+export PROJECT_ID=$(gcloud config get-value project)
+
+bq mk bq_logs
+git clone https://github.com/karankk45/karankk45.git
+bq query --location=us --use_legacy_sql=false --use_cache=false \
+'SELECT current_date'
+
+echo "https://console.cloud.google.com/logs/query;query=resource.type%3D%22bigquery_resource%22%0D%0AprotoPayload.methodName%3D%22jobservice.jobcompleted%22;cursorTimestamp=2023-10-04T07:38:58.140101Z;duration=PT1H?referrer=search&project=$PROJECT_ID"
+
+echo "                          "
+echo "SINK LINK : https://console.cloud.google.com/logs/router/sink;query=resource.type%3D%22bigquery_resource%22%0D%0AprotoPayload.methodName%3D%22jobservice.jobcompleted%22?project=$PROJECT_ID"
+
+
+#----------COPY THE LAST WHOLE LINK IN TERMINAL AND PASTE IN NEW TAB TO OPEN SINK PAGE TO LOGS EXPLORER -----
+#---SINK NAME :  JobComplete -----
+#----SINK SERVICE : BigQuery dataset ----
+#----SINK DESTINATION : bq_logs -------
+#--LEAVE THE REST AUTOMATED POPULATED > CLICK NEXT > CLICK CREATE SINK
+
+
+bq query --location=us --use_legacy_sql=false --use_cache=false \
+'SELECT fullName, AVG(CL.numberOfYears) avgyears
+ FROM `qwiklabs-resources.qlbqsamples.persons_living`, UNNEST(citiesLived) as CL
+ GROUP BY fullname'
+
+bq query --location=us --use_legacy_sql=false --use_cache=false \
+'select month, avg(mean_temp) as avgtemp from `qwiklabs-resources.qlweather_geo.gsod`
+ where station_number = 947680
+ and year = 2010
+ group by month
+ order by month'
+
+bq query --location=us --use_legacy_sql=false --use_cache=false \
+'select CONCAT(departure_airport, "-", arrival_airport) as route, count(*) as numberflights
+ from `bigquery-samples.airline_ontime_data.airline_id_codes` ac,
+ `qwiklabs-resources.qlairline_ontime_data.flights` fl
+ where ac.code = fl.airline_code
+ and regexp_contains(ac.airline ,  r"Alaska")
+ group by 1
+ order by 2 desc
+ LIMIT 10'
+echo "                          "
+echo "                          "
+echo "                          "
+echo "BIG QUERY CONSOLE LINK : https://console.cloud.google.com/bigquery?authuser=1&project=$PROJECT_ID"
+
+sleep 30 
+
+bq query --location=us --use_legacy_sql=false --use_cache=false \
+'SELECT fullName, AVG(CL.numberOfYears) avgyears
+ FROM `qwiklabs-resources.qlbqsamples.persons_living`, UNNEST(citiesLived) as CL
+ GROUP BY fullname'
+
+bq query --location=us --use_legacy_sql=false --use_cache=false \
+'select month, avg(mean_temp) as avgtemp from `qwiklabs-resources.qlweather_geo.gsod`
+ where station_number = 947680
+ and year = 2010
+ group by month
+ order by month'
+
+bq query --location=us --use_legacy_sql=false --use_cache=false \
+'select CONCAT(departure_airport, "-", arrival_airport) as route, count(*) as numberflights
+ from `bigquery-samples.airline_ontime_data.airline_id_codes` ac,
+ `qwiklabs-resources.qlairline_ontime_data.flights` fl
+ where ac.code = fl.airline_code
+ and regexp_contains(ac.airline ,  r"Alaska")
+ group by 1
+ order by 2 desc
+ LIMIT 10'
+echo "                          "
+echo "                          "
+echo "                          "
+echo "BIG QUERY CONSOLE LINK : https://console.cloud.google.com/bigquery?authuser=1&project=$PROJECT_ID"
+#----OPEN BIGQUERY LINK TO SEE IF YOU ARE ABLE TO SEE TABLE : cloudaudit_googleapis_com_data_access_<TODAY_DATE> ----
+#---KEEP REFRESHING UNTIL YOU SEE THIS TABLE-----
+#-----ONCE YOU SEE TABLE > RUN BELOW COMMANDS----
+
+sed -i "s#PROJECT_ID#$PROJECT_ID#g" karankk45/bqquery.sh
+sudo chmod +x karankk45/bqquery.sh
+./karankk45/bqquery.sh
+
+
+
+
+
+

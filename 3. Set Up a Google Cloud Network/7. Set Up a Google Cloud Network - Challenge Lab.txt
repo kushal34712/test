@@ -1,0 +1,185 @@
+#----TASK 1----
+REGION=us-central1
+ANTERN_OWNER_USER=student-03-6d532433a614@qwiklabs.net
+ANTERN_EDITOR_USER=student-00-08aada0671c5@qwiklabs.net
+CYMBAL_OWNER_USER=student-00-21e17bf0ea55@qwiklabs.net
+CYMBAL_EDITOR_USER=student-00-20e57ef76578@qwiklabs.net
+gcloud services enable \
+datamigration.googleapis.com \
+servicenetworking.googleapis.com
+
+
+gcloud projects add-iam-policy-binding $DEVSHELL_PROJECT_ID --member=user:$ANTERN_EDITOR_USER --role=roles/cloudsql.instanceUser
+gcloud projects add-iam-policy-binding $DEVSHELL_PROJECT_ID --member=user:$CYMBAL_OWNER_USER --role=roles/cloudsql.admin
+gcloud projects remove-iam-policy-binding $DEVSHELL_PROJECT_ID --member=user:$CYMBAL_EDITOR_USER --role=roles/viewer
+gcloud projects add-iam-policy-binding $DEVSHELL_PROJECT_ID --member=user:$CYMBAL_EDITOR_USER --role=roles/editor
+gcloud projects add-iam-policy-binding $DEVSHELL_PROJECT_ID --member=user:$CYMBAL_EDITOR_USER --role=roles/viewer
+
+gcloud beta compute ssh antern-postgresql-vm -- -vvv
+#----------SSH---------
+sudo apt install postgresql-13-pglogical
+#----
+sudo su - postgres -c "gsutil cp gs://cloud-training/gsp918/pg_hba_append.conf ."
+sudo su - postgres -c "gsutil cp gs://cloud-training/gsp918/postgresql_append.conf ."
+sudo su - postgres -c "cat pg_hba_append.conf >> /etc/postgresql/13/main/pg_hba.conf"
+sudo su - postgres -c "cat postgresql_append.conf >> /etc/postgresql/13/main/postgresql.conf"
+sudo systemctl restart postgresql@13-main
+
+sudo su - postgres
+psql
+
+#----PLSQL TERMINAL-----------
+
+\c postgres;
+CREATE EXTENSION pglogical;
+\c orders;
+CREATE EXTENSION pglogical;
+\c gmemegen_db;
+CREATE EXTENSION pglogical;
+
+\l
+
+CREATE USER import_user PASSWORD 'DMS_1s_cool!';
+ALTER DATABASE orders OWNER TO import_user;
+ALTER ROLE import_user WITH REPLICATION;
+
+\c postgres;
+GRANT USAGE ON SCHEMA pglogical TO import_user;
+GRANT ALL ON SCHEMA pglogical TO import_user;
+GRANT SELECT ON pglogical.tables TO import_user;
+GRANT SELECT ON pglogical.depend TO import_user;
+GRANT SELECT ON pglogical.local_node TO import_user;
+GRANT SELECT ON pglogical.local_sync_status TO import_user;
+GRANT SELECT ON pglogical.node TO import_user;
+GRANT SELECT ON pglogical.node_interface TO import_user;
+GRANT SELECT ON pglogical.queue TO import_user;
+GRANT SELECT ON pglogical.replication_set TO import_user;
+GRANT SELECT ON pglogical.replication_set_seq TO import_user;
+GRANT SELECT ON pglogical.replication_set_table TO import_user;
+GRANT SELECT ON pglogical.sequence_state TO import_user;
+GRANT SELECT ON pglogical.subscription TO import_user;
+
+\c orders;
+GRANT USAGE ON SCHEMA pglogical TO import_user;
+GRANT ALL ON SCHEMA pglogical TO import_user;
+GRANT SELECT ON pglogical.tables TO import_user;
+GRANT SELECT ON pglogical.depend TO import_user;
+GRANT SELECT ON pglogical.local_node TO import_user;
+GRANT SELECT ON pglogical.local_sync_status TO import_user;
+GRANT SELECT ON pglogical.node TO import_user;
+GRANT SELECT ON pglogical.node_interface TO import_user;
+GRANT SELECT ON pglogical.queue TO import_user;
+GRANT SELECT ON pglogical.replication_set TO import_user;
+GRANT SELECT ON pglogical.replication_set_seq TO import_user;
+GRANT SELECT ON pglogical.replication_set_table TO import_user;
+GRANT SELECT ON pglogical.sequence_state TO import_user;
+GRANT SELECT ON pglogical.subscription TO import_user;
+
+GRANT USAGE ON SCHEMA public TO import_user;
+GRANT ALL ON SCHEMA public TO import_user;
+GRANT SELECT ON public.distribution_centers TO import_user;
+GRANT SELECT ON public.inventory_items TO import_user;
+GRANT SELECT ON public.order_items TO import_user;
+GRANT SELECT ON public.products TO import_user;
+GRANT SELECT ON public.users TO import_user;
+
+\c gmemegen_db;
+GRANT USAGE ON SCHEMA pglogical TO import_user;
+GRANT ALL ON SCHEMA pglogical TO import_user;
+GRANT SELECT ON pglogical.tables TO import_user;
+GRANT SELECT ON pglogical.depend TO import_user;
+GRANT SELECT ON pglogical.local_node TO import_user;
+GRANT SELECT ON pglogical.local_sync_status TO import_user;
+GRANT SELECT ON pglogical.node TO import_user;
+GRANT SELECT ON pglogical.node_interface TO import_user;
+GRANT SELECT ON pglogical.queue TO import_user;
+GRANT SELECT ON pglogical.replication_set TO import_user;
+GRANT SELECT ON pglogical.replication_set_seq TO import_user;
+GRANT SELECT ON pglogical.replication_set_table TO import_user;
+GRANT SELECT ON pglogical.sequence_state TO import_user;
+GRANT SELECT ON pglogical.subscription TO import_user;
+
+GRANT USAGE ON SCHEMA public TO import_user;
+GRANT ALL ON SCHEMA public TO import_user;
+GRANT SELECT ON public.meme TO import_user;
+
+\c orders;
+\dt
+ALTER TABLE public.distribution_centers OWNER TO import_user;
+ALTER TABLE public.inventory_items OWNER TO import_user;
+ALTER TABLE public.order_items OWNER TO import_user;
+ALTER TABLE public.products OWNER TO import_user;
+ALTER TABLE public.users OWNER TO import_user;
+\dt
+
+ALTER TABLE public.inventory_items ADD PRIMARY KEY(id);
+\q 
+exit
+
+#------------ANTERN TERMINAL 2-----------------
+REGION=us-central1
+
+VM_ZONE=$(gcloud compute instances list --filter="name=antern-postgresql-vm" --format "get(zone)" | awk -F/ '{print $NF}')
+VM_IP=$(gcloud compute instances describe antern-postgresql-vm --zone=$VM_ZONE \
+  --format='get(networkInterfaces[0].networkIP)')
+
+gcloud database-migration connection-profiles create postgresql postgres-vm --region=$REGION --password=DMS_1s_cool! \
+--username=import_user --display-name=postgres-vm --host=$VM_IP --port=5432 
+ 
+
+#-----CREATE MIGRATION JOB FROM CONSOLE--------
+JOB-NAME : postgres-vm
+
+#--WAIT HERE FOR JOB STATUS TO CHANGE IN CDC DUMP PROGRESS--
+
+#----ANTERN TERMINAL 2 AGAIN----
+REGION=us-central1
+gcloud database-migration migration-jobs promote postgres-vm --region=$REGION
+
+
+
+#---------------------------------------------------------------------------------------------------------------------------
+#------------CYMBAL PROJECT TERMINAL ------CHANGE : resource.type:"VALUE"-----GIVEN IN LAB INSTRUCTIONS---------------------
+
+ANTERN_OWNER_USER=student-03-6d532433a614@qwiklabs.net
+ANTERN_EDITOR_USER=student-00-08aada0671c5@qwiklabs.net
+CYMBAL_OWNER_USER=student-00-21e17bf0ea55@qwiklabs.net
+CYMBAL_EDITOR_USER=student-00-20e57ef76578@qwiklabs.net
+
+export VPC_NAME=vpc-network-waa3
+export SUBNET1=subnet-a-w27o
+export REGION1=asia-southeast1
+export SUBNET2=subnet-b-9miu
+export REGION2=us-east1
+export RULE_NAME1=puqh-firewall-ssh
+export RULE_NAME2=aeii-firewall-rdp
+export RULE_NAME3=kncu-firewall-icmp
+
+SINK_NAME=recommendations-service-error-sink
+
+gcloud compute networks create $VPC_NAME --project=$DEVSHELL_PROJECT_ID --subnet-mode=custom --mtu=1460 --bgp-routing-mode=regional && gcloud compute networks subnets create $SUBNET1 --project=$DEVSHELL_PROJECT_ID --range=10.10.10.0/24 --stack-type=IPV4_ONLY --network=$VPC_NAME --region=$REGION1 && gcloud compute networks subnets create $SUBNET2 --project=$DEVSHELL_PROJECT_ID --range=10.10.20.0/24 --stack-type=IPV4_ONLY --network=$VPC_NAME --region=$REGION2
+
+gcloud compute --project=$DEVSHELL_PROJECT_ID firewall-rules create $RULE_NAME1 --direction=INGRESS --priority=65535 --network=$VPC_NAME --action=ALLOW --rules=tcp:22 --source-ranges=0.0.0.0/0
+
+gcloud compute --project=$DEVSHELL_PROJECT_ID firewall-rules create $RULE_NAME2 --direction=INGRESS --priority=65535 --network=$VPC_NAME --action=ALLOW --rules=tcp:3389 --source-ranges=0.0.0.0/0
+
+gcloud compute --project=$DEVSHELL_PROJECT_ID firewall-rules create $RULE_NAME3 --direction=INGRESS --priority=65535 --network=$VPC_NAME --action=ALLOW --rules=icmp --source-ranges=0.0.0.0/0
+
+export PROJECT_ID=$(gcloud config list --format 'value(core.project)')
+
+bq mk -d --data_location=US gke_app_errors_sink
+
+gcloud logging sinks create $SINK_NAME bigquery.googleapis.com/projects/$PROJECT_ID/datasets/gke_app_errors_sink  --log-filter='resource.type="resource.labels.container_name" AND severity=ERROR'
+
+
+gcloud projects add-iam-policy-binding $DEVSHELL_PROJECT_ID --member=user:$ANTERN_EDITOR_USER --role=roles/bigquery.dataViewer 
+gcloud projects add-iam-policy-binding $DEVSHELL_PROJECT_ID --member=user:$ANTERN_OWNER_USER --role=roles/bigquery.admin
+
+
+
+
+
+
+
+
+

@@ -1,0 +1,14 @@
+#--CHANGE REGION1, REGION2 & VM_ZONE (TASK 4 > siege-vm ZONE ) -------
+
+
+export REGION1=us-west1
+export REGION2=us-east1
+export VM_ZONE=us-central1-a
+
+
+curl -LO raw.githubusercontent.com/quiccklabs/Labs_solutions/master/HTTP%20Load%20Balancer%20with%20Cloud%20Armor%20AUGUST/quicklabgsp215.sh
+
+
+sudo chmod +x quicklabgsp215.sh
+
+./quicklabgsp215.sh

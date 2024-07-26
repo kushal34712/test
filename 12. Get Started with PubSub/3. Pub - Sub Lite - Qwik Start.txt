@@ -1,0 +1,8 @@
+#-----------REPLACE ZONE HERE-----[MAKE ZONE ON YOUR OWN BASED ON GIVEN REGION]
+
+ZONE=us-west1-a
+
+
+gcloud services enable pubsublite.googleapis.com
+gcloud pubsub lite-topics create my-lite-topic --location=$ZONE --partitions=1 --per-partition-bytes=32212254720 
+gcloud pubsub lite-subscriptions create my-lite-subscription --location=$ZONE --topic=my-lite-topic --delivery-requirement=deliver-after-stored

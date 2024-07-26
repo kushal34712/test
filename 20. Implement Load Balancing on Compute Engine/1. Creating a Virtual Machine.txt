@@ -1,0 +1,11 @@
+#--------CREATE gcelab INSTANCE THROUGH CONSOLE---------
+
+export ZONE=us-east4-d
+gcloud compute instances create gcelab2 --machine-type e2-medium --zone=$ZONE
+
+gcloud compute ssh gcelab  --zone=$ZONE
+#----------SSH----------------
+
+sudo apt-get update
+sudo apt-get install -y nginx
+ps auwx | grep nginx

@@ -1,0 +1,13 @@
+#------CHANGE BELOW 5 VARIABLES----
+
+export REGION=us-east1
+export SECOND_USER=student-01-903db4f515fa@qwiklabs.net
+export BUCKET_NAME=travel-bucket-qwiklabs-gcp-04-98da059a7539
+export TOPIC_NAME=travel-topic-392
+export FUNCTION_NAME=travel-thumbnail-creator
+
+
+
+curl -LO raw.githubusercontent.com/quiccklabs/Labs_solutions/master/Monitor%20and%20Manage%20Google%20Cloud%20Resources%20Challenge%20Lab/quicklabarc101.sh
+sudo chmod +x quicklabarc101.sh
+./quicklabarc101.sh

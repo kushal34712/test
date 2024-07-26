@@ -1,0 +1,20 @@
+#---------CHANGE REGION-------
+
+REGION=us-east1
+
+
+gcloud config set compute/region $REGION
+gcloud services enable appengine.googleapis.com
+git clone https://github.com/GoogleCloudPlatform/python-docs-samples.git
+cd python-docs-samples/appengine/standard_python3/hello_world
+gcloud app deploy
+gcloud app browse
+#----WHEN ASKED TO ENTER REGION > ENTER THE NUMBER FOR REGION GIVEN IN LAB INSTRUCTIONS------
+sed -i 's/"Hello World!"/"Welcome to this world!"/g' main.py  #<--REPLACE MESSAGE HERE FROM LAB INSTRCTIONS BEFORE /g
+cat main.py
+gcloud app deploy
+gcloud beta compute ssh lab-setup -- -vvv 
+#---PRESS Y > TWO TIMES ENTER--- PRESS N----
+#------------SSH------
+git clone https://github.com/GoogleCloudPlatform/python-docs-samples.git
+
