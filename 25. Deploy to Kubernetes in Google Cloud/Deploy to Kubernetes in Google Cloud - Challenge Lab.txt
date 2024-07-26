@@ -1,0 +1,10 @@
+#---------------CHANGE BELOW 4 VARIABLES----------
+
+export DOCKER_IMAGE=
+export TAG_NAME=
+export REPO_NAME=
+export ZONE=
+
+curl -LO raw.githubusercontent.com/Techcps/GSP-Short-Trick/master/Deploy%20Kubernetes%20Applications%20on%20Google%20Cloud%3A%20Challenge%20Lab/techcps318.sh
+sudo chmod +x techcps318.sh
+./techcps318.sh

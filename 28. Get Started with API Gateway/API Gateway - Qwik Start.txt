@@ -1,0 +1,102 @@
+REGION=us-east1
+
+gcloud config set compute/region $REGION
+gcloud services enable apigateway.googleapis.com
+git clone https://github.com/GoogleCloudPlatform/nodejs-docs-samples.git
+cd nodejs-docs-samples/functions/helloworld/helloworldGet
+gcloud functions deploy helloGET --runtime nodejs14 --trigger-http --allow-unauthenticated --region $REGION
+gcloud functions describe helloGET --region $REGION
+export PROJECT_ID=$(gcloud config get-value project)
+curl -v https://$REGION-$PROJECT_ID.cloudfunctions.net/helloGET
+cd ~
+touch openapi2-functions.yaml
+tee -a openapi2-functions.yaml <<EOF
+# openapi2-functions.yaml
+swagger: '2.0'
+info:
+  title: API_ID description
+  description: Sample API on API Gateway with a Google Cloud Functions backend
+  version: 1.0.0
+schemes:
+  - https
+produces:
+  - application/json
+paths:
+  /hello:
+    get:
+      summary: Greet a user
+      operationId: hello
+      x-google-backend:
+        address: https://$REGION-$PROJECT_ID.cloudfunctions.net/helloGET
+      responses:
+       '200':
+          description: A successful response
+          schema:
+            type: string
+EOF
+export API_ID="hello-world-$(cat /dev/urandom | tr -dc 'a-z' | fold -w ${1:-8} | head -n 1)"
+sed -i "s/API_ID/${API_ID}/g" openapi2-functions.yaml
+sed -i "s/PROJECT_ID/$PROJECT_ID/g" openapi2-functions.yaml
+
+export API_ID="hello-world-$(cat /dev/urandom | tr -dc 'a-z' | fold -w ${1:-8} | head -n 1)"
+echo $API_ID
+export PROJECT_NUMBER=$(gcloud projects describe $PROJECT_ID --format='value(projectNumber)')
+
+gcloud api-gateway apis create $API_ID --display-name="Hello World API"
+
+gcloud api-gateway api-configs create hello-world-config \
+  --api=$API_ID --openapi-spec=$HOME/openapi2-functions.yaml --display-name="Hello World Config" \
+  --project=$PROJECT_ID --backend-auth-service-account=$PROJECT_NUMBER-compute@developer.gserviceaccount.com
+
+gcloud api-gateway gateways create hello-gateway --display-name="Hello Gateway" --api=$API_ID --api-config=hello-world-config --location=$REGION
+
+gcloud alpha services api-keys create --display-name="testname" 
+KEY_NAME=$(gcloud alpha services api-keys list --format="value(name)" --filter "displayName=testname")
+API_KEY=$(gcloud alpha services api-keys get-key-string $KEY_NAME --format="value(keyString)")
+echo $API_KEY
+
+MANAGED_SERVICE=$(gcloud api-gateway apis list --format json | jq -r .[0].managedService | cut -d'/' -f6)
+echo $MANAGED_SERVICE
+gcloud services enable $MANAGED_SERVICE
+
+cd ~
+rm -rf openapi2-functions2.yaml
+touch openapi2-functions2.yaml
+tee openapi2-functions2.yaml <<EOF
+# openapi2-functions.yaml
+swagger: '2.0'
+info:
+  title: API_ID description
+  description: Sample API on API Gateway with a Google Cloud Functions backend
+  version: 1.0.0
+schemes:
+  - https
+produces:
+  - application/json
+paths:
+  /hello:
+    get:
+      summary: Greet a user
+      operationId: hello
+      x-google-backend:
+        address: https://REGION-PROJECT_ID.cloudfunctions.net/helloGET
+      responses:
+       '200':
+          description: A successful response
+          schema:
+            type: string
+EOF
+sed -i "s/API_ID/${API_ID}/g" openapi2-functions2.yaml
+sed -i "s/PROJECT_ID/$PROJECT_ID/g" openapi2-functions2.yaml
+sed -i "s/REGION/$REGION/g" openapi2-functions2.yaml
+
+gcloud api-gateway api-configs create hello-config \
+  --api=$API_ID --openapi-spec=$HOME/openapi2-functions2.yaml --display-name="Hello Config" \
+  --project=$PROJECT_ID --backend-auth-service-account=$PROJECT_ID@$PROJECT_ID.iam.gserviceaccount.com
+
+gcloud api-gateway gateways update hello-gateway --display-name="Hello Gateway" --api=$API_ID --api-config=hello-config --location=$REGION
+
+export GATEWAY_URL=$(gcloud api-gateway gateways describe hello-gateway --location $REGION --format json | jq -r .defaultHostname)
+curl -sL $GATEWAY_URL/hello
+curl -sL -w "\n" $GATEWAY_URL/hello?key=$API_KEY
+

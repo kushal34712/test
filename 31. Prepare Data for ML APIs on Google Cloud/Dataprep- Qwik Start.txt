@@ -1,0 +1,8 @@
+REGION=
+
+PROJECT_ID=$(gcloud config get-value core/project)
+gsutil mb gs://$PROJECT_ID
+
+#---OPEN DATAPREP > ACCEPT ALL CONDITIONS TILL IT STARTS COMPLETELY
+
+#--------LAB COMPLETED-----

@@ -1,0 +1,15 @@
+git clone https://github.com/karankk45/karankk45.git
+
+sudo chmod +x karankk45/quicklab431.sh
+./karankk45/quicklab431.sh
+
+#-----OPEN DIALOGFLOW LINK IN NEW TAB : http://dialogflow.cloud.google.com/ ---
+#---ACCEPT TERMS AND SIGN IN WITH STUDENT ACCOUNT----
+#---CREATE AGENT : GIVE RANDOM NAME---
+#---SETTINGS ICON > IMPORT EXPORT TAB > IMPORT FROM ZIP > UPLOAD dialog_flow_2.zip FILE
+#----GO TO FULLFILLMENTS TAB FROM LEFT SIDE MENU & ENABLE INLINE EDITOR--
+#--REPLACE index.js AND package.json FROM LAB INSTRUCTIONS---
+#---CHANGE PROJECT ID IN LINE 25 OF index.js file----
+#----CLICK DEPLOY AND WAIT--
+
+#----YOUR LAB IS DONE-------

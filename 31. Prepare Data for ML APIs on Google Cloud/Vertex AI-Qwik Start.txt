@@ -1,0 +1,47 @@
+ZONE=us-central1-a
+
+REGION=${ZONE::-2}
+
+
+gcloud services enable \
+  compute.googleapis.com \
+  iam.googleapis.com \
+  iamcredentials.googleapis.com \
+  monitoring.googleapis.com \
+  logging.googleapis.com \
+  notebooks.googleapis.com \
+  aiplatform.googleapis.com \
+  bigquery.googleapis.com \
+  artifactregistry.googleapis.com \
+  cloudbuild.googleapis.com \
+  container.googleapis.com \
+  notebooks.googleapis.com
+
+SERVICE_ACCOUNT_ID=vertex-custom-training-sa
+gcloud iam service-accounts create $SERVICE_ACCOUNT_ID  \
+    --description="A custom service account for Vertex custom training with Tensorboard" \
+    --display-name="Vertex AI Custom Training"
+PROJECT_ID=$(gcloud config get-value core/project)
+gcloud projects add-iam-policy-binding $PROJECT_ID \
+    --member=serviceAccount:$SERVICE_ACCOUNT_ID@$PROJECT_ID.iam.gserviceaccount.com \
+    --role="roles/storage.admin"
+gcloud projects add-iam-policy-binding $PROJECT_ID \
+    --member=serviceAccount:$SERVICE_ACCOUNT_ID@$PROJECT_ID.iam.gserviceaccount.com \
+    --role="roles/bigquery.admin"
+gcloud projects add-iam-policy-binding $PROJECT_ID \
+    --member=serviceAccount:$SERVICE_ACCOUNT_ID@$PROJECT_ID.iam.gserviceaccount.com \
+    --role="roles/aiplatform.user"
+
+gcloud notebooks instances create my-instance \
+  --vm-image-project=deeplearning-platform-release \
+  --vm-image-family=tf-2-6-cu113-notebooks-debian-11-py39 \
+  --machine-type=e2-standard-2 \
+  --location=$ZONE
+
+JUPYTER_LINK=https://console.cloud.google.com/vertex-ai/workbench/user-managed?authuser=1&project=$DEVSHELL_PROJECT_ID&supportedpurview=project
+echo $JUPYTER_LINK
+
+#----CLICK JULPYTER LINK FROM TERMINAL IN NEW TAB---
+#---CLICK OPEN JUPYTER > TERMINAL > RUN THIS COMMAND--
+
+git clone https://github.com/GoogleCloudPlatform/training-data-analyst

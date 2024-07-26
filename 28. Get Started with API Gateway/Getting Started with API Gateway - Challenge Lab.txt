@@ -1,0 +1,127 @@
+export PROJECT_ID=$(gcloud config list --format 'value(core.project)')
+export PROJECT_NUMBER=$(gcloud projects describe $PROJECT_ID --format='value(projectNumber)')
+gcloud services enable apigateway.googleapis.com
+gcloud services enable servicemanagement.googleapis.com
+gcloud services enable servicecontrol.googleapis.com
+mkdir ~/hello-http && cd $_
+touch index.js && touch package.json
+
+tee -a index.js <<EOF
+/**
+ * Responds to any HTTP request.
+ *
+ * @param {!express:Request} req HTTP request context.
+ * @param {!express:Response} res HTTP response context.
+ */
+exports.helloWorld = (req, res) => {
+  let message = req.query.message || req.body.message || 'Hello World!';
+  res.status(200).send(message);
+};
+EOF
+
+
+
+tee -a package.json <<EOF
+{
+  "name": "sample-http",
+  "version": "0.0.1"
+}
+EOF
+
+export REGION=us-central1
+
+gcloud functions deploy GCFunction \
+  --runtime nodejs18 \
+  --entry-point helloWorld \
+  --source . \
+  --region $REGION \
+  --trigger-http \
+  --timeout 540s \
+  --allow-unauthenticated \
+  --max-instances 5
+
+touch openapi2-functions.yaml
+tee openapi2-functions.yaml <<EOF
+swagger: '2.0'
+info:
+  title: GCFunction API
+  description: Sample API on API Gateway with a Google Cloud Functions backend
+  version: 1.0.0
+schemes:
+  - https
+produces:
+  - application/json
+paths:
+  /GCFunction:
+    get:
+      summary: gcfunction
+      operationId: gcfunction
+      x-google-backend:
+        address: https://REGION-PROJECT_ID.cloudfunctions.net/GCFunction
+      responses:
+       '200':
+          description: A successful response
+          schema:
+            type: string
+EOF
+export API_ID="hello-world-$(cat /dev/urandom | tr -dc 'a-z' | fold -w ${1:-8} | head -n 1)"
+sed -i "s/API_ID/${API_ID}/g" openapi2-functions.yaml
+sed -i "s/PROJECT_ID/$PROJECT_ID/g" openapi2-functions.yaml
+sed -i "s/REGION/$REGION/g" openapi2-functions.yaml
+#cloudshell download $HOME/hello-http/openapi2-functions.yaml
+
+gcloud api-gateway api-configs create gcfunction-api \
+  --api=gcfunction-api --openapi-spec=$HOME/hello-http/openapi2-functions.yaml --display-name="GCFunction API" \
+  --project=$PROJECT_ID --backend-auth-service-account=$PROJECT_NUMBER-compute@developer.gserviceaccount.com
+
+gcloud api-gateway gateways create gcfunction-api --display-name="GCFunction API" --api=gcfunction-api --api-config=gcfunction-api --location=$REGION
+
+gcloud pubsub topics create demo-topic
+gcloud pubsub topics publish demo-topic \
+  --message="Test message"
+mkdir ~/hello-http3 && cd $_
+touch index.js && touch package.json
+
+tee -a index.js <<EOF
+/**
+ * Responds to any HTTP request.
+ *
+ * @param {!express:Request} req HTTP request context.
+ * @param {!express:Response} res HTTP response context.
+ */
+const {PubSub} = require('@google-cloud/pubsub');
+const pubsub = new PubSub();
+const topic = pubsub.topic('demo-topic');
+exports.helloWorld = (req, res) => {
+  
+  // Send a message to the topic
+  topic.publishMessage({data: Buffer.from('Hello from Cloud Functions!')});
+  res.status(200).send("Message sent to Topic demo-topic!");
+};
+EOF
+
+
+
+tee -a package.json <<EOF
+{
+  "name": "sample-http",
+  "version": "0.0.1",
+  "dependencies": {
+    "@google-cloud/pubsub": "^3.4.1"
+  }
+}
+EOF
+
+export REGION=us-central1
+
+gcloud functions deploy GCFunction \
+  --runtime nodejs18 \
+  --entry-point helloWorld \
+  --source . \
+  --region $REGION \
+  --trigger-http \
+  --timeout 540s \
+  --allow-unauthenticated \
+  --max-instances 5
+
+

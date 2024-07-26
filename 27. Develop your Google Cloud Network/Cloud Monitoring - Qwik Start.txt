@@ -1,0 +1,60 @@
+export PROJECT_ID=$(gcloud config get-value project)
+export PROJECT_NUMBER=$(gcloud projects describe $PROJECT_ID --format='value(projectNumber)')
+
+#---CREATE VM INSTANCE lamp-1-vm THROUGH CONSOLE---
+
+gcloud beta compute ssh lamp-1-vm -- -vvv
+
+#-----------SSH-------------
+sudo apt-get update
+sudo apt-get install apache2 php7.0
+
+#------PRESS Y-----------
+
+sudo service apache2 restart
+curl -sSO https://dl.google.com/cloudagents/add-google-cloud-ops-agent-repo.sh
+sudo bash add-google-cloud-ops-agent-repo.sh --also-install
+#------PRESS Y-----------
+sudo systemctl status google-cloud-ops-agent"*"
+#-----PRESS q--------
+sudo apt-get update
+
+#-----CREATE UPTIME CHECK THROUGH CONSOLE----
+
+touch rising-cpu-usage.json
+tee -a rising-cpu-usage.json <<EOF
+{
+  "displayName": "Inbound Traffic Alert",
+  "userLabels": {},
+  "conditions": [
+    {
+      "displayName": "VM Instance - Network traffic",
+      "conditionThreshold": {
+        "aggregations": [
+          {
+            "alignmentPeriod": "300s",
+            "perSeriesAligner": "ALIGN_RATE"
+          }
+        ],
+        "comparison": "COMPARISON_GT",
+        "duration": "60s",
+        "filter": "resource.type = \"gce_instance\" AND metric.type = \"agent.googleapis.com/interface/traffic\"",
+        "thresholdValue": 500,
+        "trigger": {
+          "count": 1
+        }
+      }
+    }
+  ],
+  "alertStrategy": {
+    "autoClose": "604800s"
+  },
+  "combiner": "OR",
+  "enabled": true,
+  "notificationChannels": []
+}
+EOF
+
+gcloud alpha monitoring policies create --policy-from-file="rising-cpu-usage.json"
+
+

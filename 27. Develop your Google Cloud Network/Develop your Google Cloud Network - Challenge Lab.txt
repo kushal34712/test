@@ -1,0 +1,6 @@
+export ZONE=us-central1-c
+
+
+curl -LO raw.githubusercontent.com/quiccklabs/Labs_solutions/master/Develop%20your%20Google%20Cloud%20Network%20Challenge%20Lab/quicklabgsp321.sh
+sudo chmod +x quicklabgsp321.sh
+./quicklabgsp321.sh

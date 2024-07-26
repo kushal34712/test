@@ -1,0 +1,49 @@
+export PROJECT_ID=$(gcloud config get-value project)
+touch main.tf
+cat > main.tf <<EOF
+provider "google" {
+  project     = "$PROJECT_ID"
+  region      = "us-central-1"
+}
+resource "google_storage_bucket" "test-bucket-for-state" {
+  name        = "$PROJECT_ID"
+  location    = "US"
+  uniform_bucket_level_access = true
+}
+terraform {
+  backend "local" {
+    path = "terraform/state/terraform.tfstate"
+  }
+}
+EOF
+terraform init
+terraform apply
+#----------ENTER A VALUE : yes------(In Small Letters)-------
+rm -rf main.tf
+touch main.tf
+cat > main.tf <<EOF
+provider "google" {
+  project     = "$PROJECT_ID"
+  region      = "us-central-1"
+}
+resource "google_storage_bucket" "test-bucket-for-state" {
+  name        = "$PROJECT_ID"
+  location    = "US"
+  uniform_bucket_level_access = true
+}
+terraform {
+  backend "gcs" {
+    bucket  = "$PROJECT_ID"
+    prefix  = "terraform/state"
+  }
+}
+EOF
+terraform init -migrate-state
+#----------ENTER A VALUE : yes------(In Small Letters)-------
+gsutil label ch -l key:value gs://$PROJECT_ID
+
+terraform refresh
+terraform show
+
+
+
